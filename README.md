@@ -25,7 +25,7 @@ and a Composite Loss with Spatial Consistency Regularization (SCR).
 
 ## Architecture
 
-![BAHNet Architecture](figures/architecture.pdf)
+![BAHNet Architecture](figures/architecture.png)
 
 ## Code
 
