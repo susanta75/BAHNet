@@ -68,9 +68,7 @@ add just 1.32M parameters on top of the frozen 96.25M-parameter SAM ViT-B encode
 
 ## Architecture
 
-![BAHNet Architecture](figures/architecture.png)
-<!-- NOTE: export figures/model_architecture.pdf to a PNG/JPG at this path —
-     GitHub's ![]() syntax can't render an embedded PDF. -->
+![BAHNet Architecture](figures/model_architecture.jpg)
 
 ## Code
 
