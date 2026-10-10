@@ -23,6 +23,10 @@ Datasets, SAM initialization weights, and trained BAHNet checkpoints are not dis
 
 The primary model is `BAHNet` in `model/bahnet.py`. Its main blocks include DAB with MSEB, HLIF, SPPE, and BARM with MAEM.
 
+## 🧩 Model Architecture
+
+![BAHNet model architecture](figures/model_architecture.jpg)
+
 ## 🛠️ Environment Setup
 
 Use Python 3.10–3.12. Create and activate a virtual environment:
