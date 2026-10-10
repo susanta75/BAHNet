@@ -1,0 +1,40 @@
+# Python cache and artifacts
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# Virtual environments
+s75/
+.venv/
+venv/
+env/
+
+# Local credentials and agent settings
+.env
+.env.*
+.aws/
+.codex/
+.agents/
+credentials*
+*.pem
+*.key
+
+# Model outputs/checkpoints/logs
+output/
+results/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+
+# Dataset payloads (keep loader scripts only)
+dataset/SOD/
+dataset/*.zip
+dataset/**/*.zip
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

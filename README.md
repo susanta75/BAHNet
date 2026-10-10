@@ -1,91 +1,86 @@
-# BAHNet: Boundary-Aware Hybrid Network for Accurate Polyp Segmentation in Colonoscopy Images
+# BAHNet: Boundary-Aware Hybrid Network for Accurate Polyp Segmentation
 
-[![Paper](https://img.shields.io/badge/Paper-IEEE%20JBHI-blue)](https://github.com/susanta75/BAHNet)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-## Abstract
+BAHNet pairs a SAM ViT-B semantic pathway with a lightweight convolutional pathway for boundary detail in colonoscopy images. Its main components are the Domain Adaptation Block (DAB) with Multi-Scale Spatial Enhancement (MSEB), Hierarchical Level Integration and Fusion (HLIF), Sub-Patch Preservation Encoder (SPPE), and Boundary-Aware Refinement Module (BARM) with Multi-scale Adaptive Edge Module (MAEM).
 
-Missed colorectal polyps during colonoscopy screening remain a leading source of
-interval cancers; automated, boundary-precise segmentation can reduce this clinical
-risk by supporting consistent, operator-independent lesion delineation at scale.
-However, the Segment Anything Model (SAM) — the strongest available foundation model
-for segmentation — irrecoverably discards sub-patch spatial detail through its
-fixed-size patch tokenization, systematically under-segmenting small and flat polyps
-before any domain-specific processing begins. **BAHNet** tackles this structural
-limitation by pairing SAM's global semantic pathway with a lightweight parallel CNN
-branch that operates at full pixel resolution, recovering exactly the boundary detail
-the tokenization step discards. Domain-specific adaptation aligns the encoder features
-to colonoscopy statistics, multi-scale aggregation consolidates encoder
-representations, and a semantically guided refinement step merges the two pathways
-into a sharp final mask. On four public benchmarks, BAHNet outperforms current
-state-of-the-art methods on **both seen and unseen datasets**, with gains of 1.4
-points in mean Dice and 1.1 points in mean IoU on ETIS-LaribPolypDB (unseen) over the
-strongest baseline — while adding only **1.6% parameter overhead** on top of the
-frozen SAM ViT-B backbone.
+## Results and evaluation protocol
 
-## Key Components
+The paper reports the following results:
 
-- **Dual-pathway framework** — SAM ViT-B (global semantics) running in parallel with a
-  lightweight CNN branch that independently preserves sub-patch boundary detail.
-- **Domain Adaptation Block (DAB)**, with an embedded **Multi-Scale Spatial Enhancement
-  Block (MSEB)** — adapts SAM's generic ViT features to the colonoscopy domain without
-  retraining the backbone.
-- **Hierarchical Level Integration and Fusion block (HLIF)** — a consensus-driven
-  dual-gating mechanism that fuses four hierarchical encoder features into one
-  representation.
-- **Sub-Patch Preservation Encoder (SPPE)** — a CNN branch operating at full pixel
-  resolution, extracting multi-scale boundary features independently of the ViT
-  pathway.
-- **Boundary-Aware Refinement Module (BARM)** — a four-stage fusion pipeline (FPN
-  Merge → MAEM → Semantic Attention Gate → Cascaded Fusion Head) that merges SAM and
-  SPPE features into the final mask.
-- **Composite Loss with Spatial Consistency Regularization (SCR)** — pixel-level and
-  structural losses plus soft spatial priors that stabilize training on small-polyp
-  subsets.
+| Dataset | mDice | mIoU | F-measure | S-measure | E-measure | MAE |
+|---|---:|---:|---:|---:|---:|---:|
+| CVC-ClinicDB | 0.953 | 0.907 | 0.962 | 0.959 | 0.989 | 0.006 |
+| Kvasir-SEG | 0.942 | 0.895 | 0.963 | 0.938 | 0.981 | 0.014 |
+| CVC-ColonDB | 0.821 | 0.742 | 0.869 | 0.882 | 0.919 | 0.021 |
+| ETIS-LaribPolypDB | 0.804 | 0.731 | 0.858 | 0.889 | 0.934 | 0.012 |
 
-## Results
-
-Evaluated on two **seen** datasets (used in training) and two **unseen** datasets
-(held out entirely, for cross-dataset generalization):
-
-| Dataset | Split | mDice↑ | mIoU↑ | F<sub>M</sub>↑ | S<sub>M</sub>↑ | E<sub>M</sub>↑ | MAE↓ |
-|---|---|---|---|---|---|---|---|
-| CVC-ClinicDB | Seen | **0.953** | **0.907** | **0.962** | **0.959** | **0.989** | **0.006** |
-| Kvasir-SEG | Seen | **0.942** | **0.895** | **0.963** | **0.938** | **0.981** | **0.014** |
-| CVC-ColonDB | Unseen | **0.821** | **0.742** | **0.869** | **0.882** | **0.919** | 0.021 |
-| ETIS-LaribPolypDB | Unseen | **0.804** | **0.731** | **0.858** | **0.889** | **0.934** | **0.012** |
-
-BAHNet ranks first or second on every metric across all four benchmarks against 23
-compared SOTA methods spanning CNN, transformer, SAM-based, and hybrid architectures,
-and the ranking on seen data is *preserved* (not reversed) on unseen data — evidence
-of genuine generalization rather than dataset-specific memorization. Gains are most
-pronounced on small polyps (≤1000 px), the lesion category most associated with
-interval cancer when missed.
-
-**Efficiency.** The three newly proposed lightweight modules (HLIF + SPPE + BARM)
-add just 1.32M parameters on top of the frozen 96.25M-parameter SAM ViT-B encoder —
-101.2M total, with only 1.49M (1.6%) of overhead over the plain SAM baseline.
+The training script selects checkpoints using the Kvasir, ClinicDB, and ETIS test splits. Scores on those datasets are therefore not independent held-out estimates. CVC-ColonDB is not used for checkpoint selection.
 
 ## Architecture
 
-![BAHNet Architecture](figures/model_architecture.jpg)
+![BAHNet architecture](figures/model_architecture.jpg)
 
-## Code
+The primary model is `BAHNet` in `model/bahnet.py`. The encoder and decoder use SAM-derived components; local attribution and license terms are included in the source files and `LICENSE`.
 
-> **The full source code, pretrained weights, and training/evaluation scripts will be
-> released upon acceptance of the paper.**
->
-> If you have any questions in the meantime, please open an issue or contact us at
-> skhamrui2002@gmail.com
+## Setup
+
+Use Python 3.10–3.12. Create a virtual environment and install the dependencies:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+For CUDA, install the PyTorch build matching your system using the [official PyTorch selector](https://pytorch.org/get-started/locally/) before installing the remaining requirements.
+
+## Dataset layout
+
+The `Kvasir/train` folder contains the combined Kvasir and CVC-ClinicDB training images and masks. The separate ClinicDB test split is used for validation/checkpoint selection.
+
+```text
+dataset/SOD/
+  Kvasir/
+    train/image/
+    train/mask/
+    test/image/
+    test/mask/
+  CVC-ClinicDB/
+    test/image/
+    test/mask/
+  CVC-ColonDB/
+    test/image/
+    test/mask/
+  ETIS-Lari/
+    test/image/
+    test/mask/
+```
+
+Large datasets, checkpoints, results, and local environments are excluded from Git. Obtain the SAM ViT-B checkpoint separately and set its path in `train.py`.
+
+## Training
+
+```bash
+python train.py
+```
+
+Check `Args.data_path`, `Args.encoder_ckpt`, and `Args.save_dir` in `train.py` first.
+
+## Evaluation
+
+```bash
+python evaluation.py
+```
+
+Set `Args.checkpoint`, `Args.data_path`, and `Args.result_path` in `evaluation.py`. Predictions are written under `results/`, with metrics in `results/sod_metrics.csv`. Use a checkpoint trained with this BAHNet implementation.
 
 ## Citation
 
-If you find this work useful, please consider citing:
-
 ```bibtex
 @article{bahnet2026,
-  title   = {BAHNet: Boundary-Aware Hybrid Network for Accurate Polyp Segmentation
-             in Colonoscopy Images},
+  title   = {BAHNet: Boundary-Aware Hybrid Network for Accurate Polyp Segmentation in Colonoscopy Images},
   author  = {Khamrui, Susanta and Penhaker, Marek and Krejcar, Ondrej and Seal, Ayan},
   journal = {IEEE Journal of Biomedical and Health Informatics},
   year    = {2026},
@@ -93,17 +88,6 @@ If you find this work useful, please consider citing:
 }
 ```
 
-## Datasets
+## License
 
-The following public datasets are used in this work:
-
-- [Kvasir-SEG](https://datasets.simula.no/kvasir-seg/) — seen (training)
-- [CVC-ClinicDB](https://polyp.grand-challenge.org/CVCClinicDB/) — seen (training)
-- [CVC-ColonDB](http://vi.cvc.uab.es/colon-qa/cvccolondb/) — unseen (generalization test)
-- [ETIS-LaribPolypDB](https://polyp.grand-challenge.org/EtisLarib/) — unseen (generalization test)
-
-## Acknowledgements
-
-The SAM backbone is based on the
-[Segment Anything Model](https://github.com/facebookresearch/segment-anything)
-by Meta AI Research.
+This project is licensed under Apache-2.0; see `LICENSE`. The SAM-derived encoder components retain their upstream attribution.
