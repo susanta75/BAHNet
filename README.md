@@ -87,18 +87,6 @@ The script evaluates Kvasir, CVC-ClinicDB, CVC-ColonDB, and ETIS-Lari. It saves 
 
 These are the values reported in the paper; results can vary with data preparation, checkpoint, and evaluation settings. See the evaluation protocol note above when interpreting the ClinicDB, Kvasir, and ETIS scores.
 
-## Citation
-
-```bibtex
-@article{bahnet2026,
-  title   = {BAHNet: Boundary-Aware Hybrid Network for Accurate Polyp Segmentation in Colonoscopy Images},
-  author  = {Khamrui, Susanta and Penhaker, Marek and Krejcar, Ondrej and Seal, Ayan},
-  journal = {IEEE Journal of Biomedical and Health Informatics},
-  year    = {2026},
-  note    = {Under Review}
-}
-```
-
 ## License
 
 This project is licensed under Apache-2.0; see [LICENSE](LICENSE). SAM-derived components retain their upstream attribution in the source files.
