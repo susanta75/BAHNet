@@ -58,7 +58,7 @@ dataset/SOD/
     test/mask/
 ```
 
-Large datasets, checkpoints, results, and local environments are excluded from Git. Obtain the SAM ViT-B checkpoint separately and set its path in `train.py`.
+The dataset, SAM ViT-B checkpoint, trained checkpoints, and prediction outputs are external files; obtain them separately. Set the SAM checkpoint path in `train.py`.
 
 ## Training
 
