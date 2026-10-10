@@ -1,18 +1,31 @@
-# BAHNet: Boundary-Aware Hybrid Network
+# BAHNet: Boundary-Aware Hybrid Network 🚀
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+Implementation of **BAHNet**, a hybrid model for polyp segmentation in colonoscopy images. It combines a SAM ViT-B image encoder with convolutional features designed to preserve spatial details and refine polyp boundaries.
 
-BAHNet is a hybrid network for polyp segmentation in colonoscopy images. It combines a SAM ViT-B image encoder with a parallel convolutional path for fine spatial details. The implementation includes a Domain Adaptation Block (DAB) with Multi-Scale Spatial Enhancement (MSEB), Hierarchical Level Integration and Fusion (HLIF), Sub-Patch Preservation Encoder (SPPE), and Boundary-Aware Refinement Module (BARM) with Multi-scale Adaptive Edge Module (MAEM).
+## 🔗 Quick Links
 
-## Architecture
+- 🧩 [Model architecture](figures/model_architecture.jpg)
+- 📄 [Training script](train.py)
+- 🔍 [Evaluation script](evaluation.py)
+- ⚖️ [License](LICENSE)
 
-![BAHNet architecture](figures/model_architecture.jpg)
+Datasets, SAM initialization weights, and trained BAHNet checkpoints are not distributed in this repository. Obtain the files separately and configure their paths as described below.
 
-The model is implemented in `model/bahnet.py`; its network blocks are in `model/block.py`. The training loss combines the segmentation loss with side-output supervision and PSL regularization (`utils/loss.py`).
+## 🧠 Project Structure
 
-## Requirements and setup
+- `model/`: BAHNet, SAM-derived image encoder and mask decoder, transformer, and network blocks
+- `dataset/`: dataset loader and local dataset files, if provided separately
+- `utils/`: segmentation losses, PSL regularization, and average meter
+- `py_sod_metrics/`: metric implementations used during evaluation
+- `train.py`: training and checkpoint selection
+- `evaluation.py`: prediction and metric evaluation
+- `requirements.txt`: Python dependencies
 
-Use Python 3.10–3.12. Create and activate a virtual environment, then install the listed dependencies:
+The primary model is `BAHNet` in `model/bahnet.py`. Its main blocks include DAB with MSEB, HLIF, SPPE, and BARM with MAEM.
+
+## 🛠️ Environment Setup
+
+Use Python 3.10–3.12. Create and activate a virtual environment:
 
 ```bash
 python3 -m venv .venv
@@ -20,63 +33,80 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 ```
 
-Install a PyTorch build that matches your CPU or CUDA setup using the [official PyTorch instructions](https://pytorch.org/get-started/locally/), then install the project requirements:
+Install the PyTorch build for your CPU or CUDA setup using the [official PyTorch installation guide](https://pytorch.org/get-started/locally/), then install the remaining project dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Data and pretrained weights
+## 📚 Dataset Preparation
 
-The scripts expect images and masks in matching `image/` and `mask/` directories. The training loader reads `train/`; validation and evaluation loaders read `test/`. By default, `dataset/SOD/Kvasir/train/` contains the combined Kvasir and CVC-ClinicDB training images and masks, as arranged for this experiment. Keep the combined training set in this `Kvasir` folder; the scripts do not load a second ClinicDB training folder.
+The dataset loader expects paired images and masks in `image/` and `mask/` directories. The training script reads `train/`; validation and evaluation read `test/`.
 
-Expected layout:
+By default, the combined Kvasir and CVC-ClinicDB training images and masks are placed under `Kvasir/train/`. Keep the combined training data in this folder; the script does not load a separate ClinicDB training directory.
 
 ```text
-dataset/SOD/
-  Kvasir/
-    train/image/
-    train/mask/
-    test/image/
-    test/mask/
-  CVC-ClinicDB/
-    test/image/
-    test/mask/
-  CVC-ColonDB/
-    test/image/
-    test/mask/
-  ETIS-Lari/
-    test/image/
-    test/mask/
-pretrained/
-  sam_vit_b_01ec64.pth
+dataset/
+  SOD/
+    Kvasir/
+      train/
+        image/
+        mask/
+      test/
+        image/
+        mask/
+    CVC-ClinicDB/
+      test/
+        image/
+        mask/
+    CVC-ColonDB/
+      test/
+        image/
+        mask/
+    ETIS-Lari/
+      test/
+        image/
+        mask/
 ```
 
-Obtain the datasets and SAM ViT-B checkpoint separately if they are not already available locally. The training script uses `./pretrained/sam_vit_b_01ec64.pth` by default. Dataset and checkpoint paths can be changed in the `Args` classes in `train.py` and `evaluation.py`.
+Keep each image paired with its mask using matching filenames. Update the paths in the scripts if your dataset is stored elsewhere.
 
-## Training
+## 🏋️ Training
 
-Set the paths in `train.py`, then run:
+Download the SAM ViT-B checkpoint `sam_vit_b_01ec64.pth` and place it at the default path `pretrained/sam_vit_b_01ec64.pth`, or change `Args.encoder_ckpt` in `train.py`.
 
 ```bash
 python train.py
 ```
 
-The default configuration uses 512-pixel inputs, batch size 16, 100 epochs, and AdamW. Checkpoints and a CSV training log are written to `output/`. Training uses `Kvasir/train`; checkpoint selection averages MAE over the Kvasir, ClinicDB, and ETIS test splits.
+Before training, review these settings in `train.py`:
 
-**Evaluation protocol note:** those three test splits are used during checkpoint selection, so their reported scores are not independent held-out results. CVC-ColonDB is evaluated by `evaluation.py` but is not part of the checkpoint criterion.
+- `Args.data_path`: the Kvasir folder containing the combined training data
+- `Args.clinicdb_val_path`: the CVC-ClinicDB validation folder
+- `Args.etis_val_path`: the ETIS-Lari validation folder
+- `Args.encoder_ckpt`: SAM ViT-B initialization weights
+- `Args.save_dir`: checkpoint and log output directory
+- `Args.batch_size`, `Args.epochs`, `Args.img_size`: training configuration
 
-## Evaluation
+Checkpoints and `training_log.csv` are saved under `output/` by default.
 
-Set `Args.checkpoint`, `Args.data_path`, and `Args.result_path` in `evaluation.py`, then run:
+## 🔍 Evaluation / Inference
+
+Set `Args.checkpoint` in `evaluation.py` to a trained BAHNet checkpoint, then run:
 
 ```bash
 python evaluation.py
 ```
 
-The script evaluates Kvasir, CVC-ClinicDB, CVC-ColonDB, and ETIS-Lari. It saves predicted masks under `results/<dataset>/` and appends metrics to `results/sod_metrics.csv`. Use a checkpoint produced by this BAHNet implementation.
+Review these settings in `evaluation.py` first:
 
-## Reported paper results
+- `Args.checkpoint`: trained model checkpoint
+- `Args.data_path`: parent folder containing the dataset folders
+- `Args.result_path`: location for predictions and the metrics CSV
+
+Predicted masks are written to `results/<dataset>/` and metrics to `results/sod_metrics.csv` by default. Evaluation runs on Kvasir, CVC-ClinicDB, CVC-ColonDB, and ETIS-Lari.
+
+## 📊 Reported Paper Results
 
 | Dataset | mDice | mIoU | F-measure | S-measure | E-measure | MAE |
 |---|---:|---:|---:|---:|---:|---:|
@@ -85,8 +115,12 @@ The script evaluates Kvasir, CVC-ClinicDB, CVC-ColonDB, and ETIS-Lari. It saves 
 | CVC-ColonDB | 0.821 | 0.742 | 0.869 | 0.882 | 0.919 | 0.021 |
 | ETIS-LaribPolypDB | 0.804 | 0.731 | 0.858 | 0.889 | 0.934 | 0.012 |
 
-These are the values reported in the paper; results can vary with data preparation, checkpoint, and evaluation settings. See the evaluation protocol note above when interpreting the ClinicDB, Kvasir, and ETIS scores.
+These values are reported in the paper. Your results may differ with checkpoint, dataset preparation, and evaluation settings.
 
-## License
+### Checkpoint-selection note
+
+The current training script chooses checkpoints using the Kvasir, CVC-ClinicDB, and ETIS-Lari test splits. Therefore, scores on those splits are not independent held-out test estimates. CVC-ColonDB is evaluated after training but is not used for checkpoint selection.
+
+## 📄 License
 
 This project is licensed under Apache-2.0; see [LICENSE](LICENSE). SAM-derived components retain their upstream attribution in the source files.
